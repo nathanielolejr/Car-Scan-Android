@@ -54,17 +54,42 @@ or print/show it on a screen and scan it. Anything not in the table shows **Car 
 
 Supabase dashboard → **Table Editor → cars → Insert row**. (Or bulk-import a CSV.)
 
-## 5. Build an installable APK (optional)
+## 5. Share it with testers (installable APK)
+
+Testers get a link, tap it on their Android phone and install – no Expo Go needed.
+
+1. Make a free account at <https://expo.dev>, then:
 
 ```bash
 npm install -g eas-cli
 eas login
-eas build:configure
+eas init
+```
+
+2. Give the build your Supabase values (`.env` is git-ignored, so EAS can't see it). The anon key is
+   public by design, so plain-text visibility is fine:
+
+```bash
+eas env:create --environment preview --name EXPO_PUBLIC_SUPABASE_URL --value "https://YOUR-PROJECT-REF.supabase.co" --visibility plaintext
+eas env:create --environment preview --name EXPO_PUBLIC_SUPABASE_ANON_KEY --value "YOUR-ANON-PUBLIC-KEY" --visibility plaintext
+```
+
+3. Build the APK (takes ~10–20 min on Expo's free cloud queue):
+
+```bash
 eas build -p android --profile preview
 ```
 
-Set the two `EXPO_PUBLIC_…` values as EAS environment variables (or build locally with
-`npx expo run:android`, which needs Android Studio).
+4. When it finishes, EAS prints an **install link / QR code**. Send that link to your testers. On first
+   install, Android asks them to allow “Install unknown apps” for their browser – that's expected for
+   APKs outside the Play Store.
+
+**Logins for testers:** sign-up is disabled, so create accounts in Supabase (*Authentication → Users*),
+or make one shared demo account. Remember any signed-in user can read the whole `cars` table, so keep
+real personal data out of it while testing.
+
+**Quick alternative (no build):** `npx expo start --tunnel` and share the QR code with people who have
+Expo Go – it only works while your computer is running the command.
 
 ## Project layout
 
@@ -74,6 +99,7 @@ src/context/AuthContext.tsx  Supabase session handling
 src/lib/supabase.ts          Supabase client
 src/lib/cars.ts              registry lookup (findCarByCode)
 src/screens/LoginScreen.tsx  login UI
+eas.json                     build profiles for sharing (APK)
 src/screens/ScannerScreen.tsx  camera + scan overlay
 src/components/ResultSheet.tsx found / not in registry / error card
 supabase/schema.sql          table, security rules, sample data
